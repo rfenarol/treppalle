@@ -13,15 +13,21 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     public List<Reservation> findByEmailOrLastNameOrFirstName(String email, String lastName, String firstName);
 
-    public List<Reservation> findByReservationDate(Date reservationDateTime);
-
     //USED TO FIND ALL THE RESERVATIONS STARTING FROM TODAY
-    public List<Reservation> findByReservationDateTimeGreaterThanEqual(Date today);
+    List<Reservation> findByReservationDateTimeGreaterThan(Date yesterday);
 
-    public Reservation findByReservationDateTime(Date reservationDateTime);
+    List<Reservation> findByReservationDateTime(Date reservationDateTime);
 
-    public Long deleteByReservationDateTime(Date reservationDateTime);
+    Reservation findByReservationDateTimeAndCourt(Date reservationDateTime, Integer court);
 
-    public List<Reservation> findByReservationDateTimeBetween(Date reservationTime, Date reservationEndTime);
+    Long deleteByReservationDateTimeAndCourt(Date reservationDateTime, Integer court);
+
+    List<Reservation> findByReservationDateTimeAfterAndReservationEndDateTimeBeforeAndCourt(Date reservationTime, Date reservationEndTime, Integer court);
+
+    List<Reservation> findByReservationDateTimeBeforeAndReservationEndDateTimeAfterAndCourt(Date reservationDateTime, Date reservationEndDateTime, Integer court);
+
+    List<Reservation> findByReservationDateTimeGreaterThanEqualAndReservationDateTimeBeforeAndCourt(Date reservationDateTime, Date reservationEndDateTime, Integer court);
+
+    List<Reservation> findByReservationEndDateTimeAfterAndReservationEndDateTimeLessThanEqualAndCourt(Date reservationDateTime, Date reservationEndDateTime, Integer court);
 
 }

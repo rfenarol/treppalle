@@ -8,6 +8,7 @@ import it.forfun.coding.tp.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,9 +38,9 @@ public class ReservationController {
                                               @RequestParam(value = "email", required=false) String email,
                                               @RequestParam(value = "lastName", required=false) String lastName,
                                               @RequestParam(value = "firstName", required=false) String firstName,
-                                              @RequestParam(value = "reservationDate", required=false) Date reservationDate) throws ReservationNotFoundException{
+                                              @RequestParam(value = "reservationDate", required=false) @DateTimeFormat(pattern="yyyy-MM-dd HH:mm") Date reservationDate) throws ReservationNotFoundException, ParseException {
         logger.info("GET Reservations");
-        if(email != null && lastName != null && firstName != null)
+        if(email != null || lastName != null || firstName != null)
             return reservationService.findByEmailOrLastNameOrFirstName(email, lastName, firstName);
         else if(reservationDate != null)
             return reservationService.findByReservationDate(reservationDate);
@@ -47,20 +48,22 @@ public class ReservationController {
         return reservationService.findAll();
     }
 
-    @RequestMapping(value = "/{reservationDateTime}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{court}/{reservationDateTime}", method = RequestMethod.GET)
     @ResponseStatus(code = HttpStatus.OK)
-    public Reservation findByReservationDateTime(HttpServletRequest request,
-                                                 @PathVariable String reservationDateTime) throws ReservationNotFoundException, ParseException {
+    public Reservation findByReservationDateTimeAndCourt(HttpServletRequest request,
+                                                         @PathVariable Integer court,
+                                                         @PathVariable String reservationDateTime) throws ReservationNotFoundException, ParseException {
         logger.info("GET Reservations");
-        return reservationService.findByReservationDateTime(DateUtil.stringToDateTime(reservationDateTime));
+        return reservationService.findByReservationDateTimeAndCourt(DateUtil.stringToDateTime(reservationDateTime), court);
     }
 
     @RequestMapping(method = RequestMethod.DELETE)
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     public void delete(HttpServletRequest request,
-                       @RequestParam(value = "reservationDate", required=true) String reservationDateTime) throws ReservationNotFoundException, ParseException {
+                       @RequestParam(value = "reservationDate", required=true) String reservationDateTime,
+                       @RequestParam(value = "court", required=true) Integer court) throws ReservationNotFoundException, ParseException {
         this.logger.info("Deleting reservation with date and time: {}", reservationDateTime);
-        this.reservationService.deleteByReservationDateTime(DateUtil.stringToDateTime(reservationDateTime));
+        this.reservationService.deleteByReservationDateTimeAndCourt(DateUtil.stringToDateTime(reservationDateTime), court);
     }
 
     @RequestMapping(method = RequestMethod.POST)
@@ -68,7 +71,8 @@ public class ReservationController {
         ValidatorUtil.raiseFirstError(result);
         reservationService.save(reservation);
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setLocation(ServletUriComponentsBuilder.fromCurrentRequest().path("/{reservationDateTime}").buildAndExpand(reservation.getReservationDateTime()).toUri());
+        httpHeaders.setLocation(ServletUriComponentsBuilder.fromCurrentRequest().path("/{court}/{reservationDateTime}")
+                .buildAndExpand(reservation.getCourt(), reservation.getReservationDateTime()).toUri());
         return new ResponseEntity<>(null, httpHeaders, HttpStatus.CREATED);
 
     }

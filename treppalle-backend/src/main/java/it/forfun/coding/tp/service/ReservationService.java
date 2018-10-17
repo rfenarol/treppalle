@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -22,12 +23,23 @@ public class ReservationService implements IReservationService{
     @Override
     @Transactional(readOnly = false)
     public void save(Reservation reservation) throws ReservationConflictException {
-        Date reservatioEndDateTime = DateUtil.addHoursToJavaUtilDate(reservation.getReservationDateTime(), reservation.getDuration());
-        Reservation res = reservationRepository.findByReservationDateTime(reservation.getReservationDateTime());
-        List<Reservation> reservations = reservationRepository.findByReservationDateTimeBetween(reservation.getReservationDateTime(), reservatioEndDateTime);
-        if (res != null || !reservations.isEmpty())
+        Date reservationEndDateTime = DateUtil.addHoursToJavaUtilDate(reservation.getReservationDateTime(), reservation.getDuration());
+        List<Reservation> reservationsIncludedInNew = reservationRepository.findByReservationDateTimeAfterAndReservationEndDateTimeBeforeAndCourt(
+                reservation.getReservationDateTime(), reservationEndDateTime, reservation.getCourt());
+        List<Reservation> reservationsIncludingNew = reservationRepository.findByReservationDateTimeBeforeAndReservationEndDateTimeAfterAndCourt(
+                reservation.getReservationDateTime(), reservationEndDateTime, reservation.getCourt());
+        List<Reservation> reservationsStartInTheMiddle = reservationRepository.findByReservationDateTimeGreaterThanEqualAndReservationDateTimeBeforeAndCourt(
+                reservation.getReservationDateTime(), reservationEndDateTime, reservation.getCourt());
+        List<Reservation> reservationsEndInTheMiddle = reservationRepository.findByReservationEndDateTimeAfterAndReservationEndDateTimeLessThanEqualAndCourt(
+                reservation.getReservationDateTime(), reservationEndDateTime, reservation.getCourt());
+
+        if (!reservationsIncludingNew.isEmpty() ||
+                !reservationsIncludedInNew.isEmpty() ||
+                !reservationsStartInTheMiddle.isEmpty() ||
+                !reservationsEndInTheMiddle.isEmpty())
             throw new ReservationConflictException(reservation.getEmail());
-        reservation.setReservationEndDateTime(reservatioEndDateTime);
+
+        reservation.setReservationEndDateTime(reservationEndDateTime);
         reservationRepository.save(reservation);
 
     }
@@ -35,7 +47,7 @@ public class ReservationService implements IReservationService{
     @Override
     @Transactional(readOnly = false)
     public void update(Reservation reservation) throws ReservationNotFoundException {
-        Reservation res = reservationRepository.findByReservationDateTime(reservation.getReservationDateTime());
+        Reservation res = reservationRepository.findByReservationDateTimeAndCourt(reservation.getReservationDateTime(), reservation.getCourt());
         if (res == null)
             throw new ReservationNotFoundException(reservation.getEmail());
         reservationRepository.save(reservation);
@@ -44,7 +56,9 @@ public class ReservationService implements IReservationService{
     @Override
     @Transactional(readOnly = true)
     public List<Reservation> findAll() {
-        return reservationRepository.findByReservationDateTimeGreaterThanEqual(new Date());
+        final Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -1);
+        return reservationRepository.findByReservationDateTimeGreaterThan(cal.getTime());
     }
 
 
@@ -60,28 +74,36 @@ public class ReservationService implements IReservationService{
     @Override
     @Transactional(readOnly = true)
     public List<Reservation> findByReservationDate(Date reservationDate) throws ReservationNotFoundException {
-        List<Reservation> reservations = reservationRepository.findByReservationDate(reservationDate);
+        List<Reservation> reservations = reservationRepository.findByReservationDateTime(reservationDate);
         if(reservations.isEmpty())
-            throw new ReservationNotFoundException();
+            throw new ReservationNotFoundException(DateUtil.dateToString(reservationDate));
         return reservations;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Reservation findByReservationDateTime(Date reservationDateTime) throws ReservationNotFoundException {
-        Reservation reservation = reservationRepository.findByReservationDateTime(reservationDateTime);
-        if(reservation == null)
-            throw new ReservationNotFoundException(reservation.getEmail());
-        return reservation;
+    public List<Reservation> findByReservationDateTime(Date reservationDateTime) throws ReservationNotFoundException {
+        List<Reservation> reservations = reservationRepository.findByReservationDateTime(reservationDateTime);
+        if(reservations.isEmpty())
+            throw new ReservationNotFoundException(DateUtil.dateToString(reservationDateTime));
+        return reservations;
     }
 
 
     @Override
     @Transactional(readOnly = false)
-    public void deleteByReservationDateTime(Date reservationDateTime) throws ReservationNotFoundException {
-        Long deletedReservation = this.reservationRepository.deleteByReservationDateTime(reservationDateTime);
+    public void deleteByReservationDateTimeAndCourt(Date reservationDateTime, Integer court) throws ReservationNotFoundException {
+        Long deletedReservation = this.reservationRepository.deleteByReservationDateTimeAndCourt(reservationDateTime, court);
         if(deletedReservation == null)
             throw new ReservationNotFoundException();
+    }
+
+    @Override
+    public Reservation findByReservationDateTimeAndCourt(Date reservationDateTime, Integer court) throws ReservationNotFoundException {
+        Reservation res = reservationRepository.findByReservationDateTimeAndCourt(reservationDateTime, court);
+        if (res == null)
+            throw new ReservationNotFoundException("Date: " + DateUtil.dateToString(reservationDateTime) + " court: " + court);
+        return res;
     }
 
 }

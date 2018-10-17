@@ -37,6 +37,12 @@ public class DateUtil {
         return dateFormat.parse(date);
     }
 
+    public static String dateToString(Date date){
+        DateFormat dateFormat = new SimpleDateFormat(dateDayTimeFormat);
+//        FastDateFormat dateFormat = FastDateFormat.getInstance(dateDayTimeFormat);
+        return dateFormat.format(date);
+    }
+
 
 
 }

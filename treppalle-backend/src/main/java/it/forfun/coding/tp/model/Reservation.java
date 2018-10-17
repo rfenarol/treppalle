@@ -1,6 +1,8 @@
 package it.forfun.coding.tp.model;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.Range;
 
@@ -18,6 +20,7 @@ public class Reservation implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column
+    @JsonIgnore
     private Long id;
 
     @Enumerated(EnumType.STRING)
@@ -45,10 +48,12 @@ public class Reservation implements Serializable {
 
     @Column
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone="CET")
     private Date reservationDateTime;
 
     @Column
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd HH:mm:ss", timezone="CET")
     private Date reservationEndDateTime;
 
     @Column
@@ -122,7 +127,7 @@ public class Reservation implements Serializable {
         this.duration = duration;
     }
 
-    public ReservationState getState() {
+    public ReservationState getStafte() {
         return state;
     }
 
