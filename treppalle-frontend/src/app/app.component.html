@@ -1,0 +1,45 @@
+
+<!--<ng-progress></ng-progress>-->
+<div>
+	<!--<header-top id="header" (toggleClickEvent)="menubar = !menubar"></header-top>-->
+
+
+
+	<div id="base">
+		<!-- BEGIN OFFCANVAS LEFT -->
+		<div class="offcanvas"></div>
+		<!--end .offcanvas-->
+		<!-- END OFFCANVAS LEFT -->
+		<div id="content">
+
+			<h1>List of Reservation:</h1>
+			<div class="card  panel card-underline no-padding" *ngFor="let reservation of reservations;">
+				<ul>
+					<li>First Name: {{reservation.firstName}}</li>
+					<li>Last Name: {{reservation.lastName}}</li>
+					<li>E-mail: {{reservation.email}}</li>
+					<li>Phone Number: {{reservation.phoneNumber}}</li>
+					<li>Court #: {{reservation.court}}</li>
+					<li>Reservation Start Time: {{reservation.reservationDateTime}}</li>
+					<li>Reservation End Time: {{reservation.reservationEndDateTime}}</li>
+					<li>Duration: {{reservation.duration}}</li>
+				</ul>
+
+			<!--<section (mouseover)="mouseOverEvent()">-->
+				<!--<div class="section-body">-->
+					<!--<router-outlet></router-outlet>-->
+				<!--</div>-->
+			<!--</section>-->
+		</div>
+
+
+		<!--<menubar (mouseover)="menubar = true" (mouseout)="menubar = false"></menubar>-->
+
+	</div>
+	<div id="device-breakpoints">
+		<div class="device-xs visible-xs" data-breakpoint="xs"></div>
+		<div class="device-sm visible-sm" data-breakpoint="sm"></div>
+		<div class="device-md visible-md" data-breakpoint="md"></div>
+		<div class="device-lg visible-lg" data-breakpoint="lg"></div>
+	</div>
+</div>
